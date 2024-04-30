@@ -4,6 +4,7 @@
 #ifndef QTEDITORFACTORY_H
 #define QTEDITORFACTORY_H
 
+#include "QtPropertyBrowser_Global.h"
 #include "qtpropertymanager.h"
 
 QT_BEGIN_NAMESPACE
@@ -12,7 +13,8 @@ class QRegularExpression;
 
 class QtSpinBoxFactoryPrivate;
 
-class QtSpinBoxFactory : public QtAbstractEditorFactory<QtIntPropertyManager>
+//FIXED: 给本头文件中所有类都加上 dll 导出声明
+class QtPropertyBrowser_EXPORT QtSpinBoxFactory : public QtAbstractEditorFactory<QtIntPropertyManager>
 {
     Q_OBJECT
 public:
@@ -31,7 +33,7 @@ private:
 
 class QtSliderFactoryPrivate;
 
-class QtSliderFactory : public QtAbstractEditorFactory<QtIntPropertyManager>
+class QtPropertyBrowser_EXPORT QtSliderFactory : public QtAbstractEditorFactory<QtIntPropertyManager>
 {
     Q_OBJECT
 public:
@@ -50,7 +52,7 @@ private:
 
 class QtScrollBarFactoryPrivate;
 
-class QtScrollBarFactory : public QtAbstractEditorFactory<QtIntPropertyManager>
+class QtPropertyBrowser_EXPORT QtScrollBarFactory : public QtAbstractEditorFactory<QtIntPropertyManager>
 {
     Q_OBJECT
 public:
@@ -69,7 +71,7 @@ private:
 
 class QtCheckBoxFactoryPrivate;
 
-class QtCheckBoxFactory : public QtAbstractEditorFactory<QtBoolPropertyManager>
+class QtPropertyBrowser_EXPORT QtCheckBoxFactory : public QtAbstractEditorFactory<QtBoolPropertyManager>
 {
     Q_OBJECT
 public:
@@ -88,7 +90,7 @@ private:
 
 class QtDoubleSpinBoxFactoryPrivate;
 
-class QtDoubleSpinBoxFactory : public QtAbstractEditorFactory<QtDoublePropertyManager>
+class QtPropertyBrowser_EXPORT QtDoubleSpinBoxFactory : public QtAbstractEditorFactory<QtDoublePropertyManager>
 {
     Q_OBJECT
 public:
@@ -107,7 +109,7 @@ private:
 
 class QtLineEditFactoryPrivate;
 
-class QtLineEditFactory : public QtAbstractEditorFactory<QtStringPropertyManager>
+class QtPropertyBrowser_EXPORT QtLineEditFactory : public QtAbstractEditorFactory<QtStringPropertyManager>
 {
     Q_OBJECT
 public:
@@ -126,7 +128,7 @@ private:
 
 class QtDateEditFactoryPrivate;
 
-class QtDateEditFactory : public QtAbstractEditorFactory<QtDatePropertyManager>
+class QtPropertyBrowser_EXPORT QtDateEditFactory : public QtAbstractEditorFactory<QtDatePropertyManager>
 {
     Q_OBJECT
 public:
@@ -145,7 +147,7 @@ private:
 
 class QtTimeEditFactoryPrivate;
 
-class QtTimeEditFactory : public QtAbstractEditorFactory<QtTimePropertyManager>
+class QtPropertyBrowser_EXPORT QtTimeEditFactory : public QtAbstractEditorFactory<QtTimePropertyManager>
 {
     Q_OBJECT
 public:
@@ -164,7 +166,7 @@ private:
 
 class QtDateTimeEditFactoryPrivate;
 
-class QtDateTimeEditFactory : public QtAbstractEditorFactory<QtDateTimePropertyManager>
+class QtPropertyBrowser_EXPORT QtDateTimeEditFactory : public QtAbstractEditorFactory<QtDateTimePropertyManager>
 {
     Q_OBJECT
 public:
@@ -183,7 +185,7 @@ private:
 
 class QtKeySequenceEditorFactoryPrivate;
 
-class QtKeySequenceEditorFactory : public QtAbstractEditorFactory<QtKeySequencePropertyManager>
+class QtPropertyBrowser_EXPORT QtKeySequenceEditorFactory : public QtAbstractEditorFactory<QtKeySequencePropertyManager>
 {
     Q_OBJECT
 public:
@@ -202,7 +204,7 @@ private:
 
 class QtCharEditorFactoryPrivate;
 
-class QtCharEditorFactory : public QtAbstractEditorFactory<QtCharPropertyManager>
+class QtPropertyBrowser_EXPORT QtCharEditorFactory : public QtAbstractEditorFactory<QtCharPropertyManager>
 {
     Q_OBJECT
 public:
@@ -221,7 +223,7 @@ private:
 
 class QtEnumEditorFactoryPrivate;
 
-class QtEnumEditorFactory : public QtAbstractEditorFactory<QtEnumPropertyManager>
+class QtPropertyBrowser_EXPORT QtEnumEditorFactory : public QtAbstractEditorFactory<QtEnumPropertyManager>
 {
     Q_OBJECT
 public:
@@ -240,7 +242,7 @@ private:
 
 class QtCursorEditorFactoryPrivate;
 
-class QtCursorEditorFactory : public QtAbstractEditorFactory<QtCursorPropertyManager>
+class QtPropertyBrowser_EXPORT QtCursorEditorFactory : public QtAbstractEditorFactory<QtCursorPropertyManager>
 {
     Q_OBJECT
 public:
@@ -259,7 +261,7 @@ private:
 
 class QtColorEditorFactoryPrivate;
 
-class QtColorEditorFactory : public QtAbstractEditorFactory<QtColorPropertyManager>
+class QtPropertyBrowser_EXPORT QtColorEditorFactory : public QtAbstractEditorFactory<QtColorPropertyManager>
 {
     Q_OBJECT
 public:
@@ -278,7 +280,7 @@ private:
 
 class QtFontEditorFactoryPrivate;
 
-class QtFontEditorFactory : public QtAbstractEditorFactory<QtFontPropertyManager>
+class QtPropertyBrowser_EXPORT QtFontEditorFactory : public QtAbstractEditorFactory<QtFontPropertyManager>
 {
     Q_OBJECT
 public:
@@ -294,6 +296,24 @@ private:
     Q_DECLARE_PRIVATE(QtFontEditorFactory)
     Q_DISABLE_COPY_MOVE(QtFontEditorFactory)
 };
+
+//FIXED: 给模板类的每种实例添加 dll 导出声明
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtAbstractPropertyManager>;
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtIntPropertyManager>;
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtIntPropertyManager>;
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtBoolPropertyManager>;
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtDoublePropertyManager>;
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtStringPropertyManager>;
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtDatePropertyManager>;
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtTimePropertyManager>;
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtDateTimePropertyManager>;
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtKeySequencePropertyManager>;
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtCharPropertyManager>;
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtEnumPropertyManager>;
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtCursorPropertyManager>;
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtColorPropertyManager>;
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtFontPropertyManager>;
+
 
 QT_END_NAMESPACE
 

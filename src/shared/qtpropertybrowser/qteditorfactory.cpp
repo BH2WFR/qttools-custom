@@ -1102,6 +1102,7 @@ QWidget *QtDateEditFactory::createEditor(QtDatePropertyManager *manager, QtPrope
         QWidget *parent)
 {
     QDateEdit *editor = d_ptr->createEditor(property, parent);
+	editor->setFont(QApplication::font()); //FIXED: 字体修改, 避免 Qt 中文字体的 Bug
     editor->setDisplayFormat(QtPropertyBrowserUtils::dateFormat());
     editor->setCalendarPopup(true);
     editor->setDateRange(manager->minimum(property), manager->maximum(property));
@@ -1476,7 +1477,7 @@ protected:
     void keyPressEvent(QKeyEvent *e) override;
     void keyReleaseEvent(QKeyEvent *e) override;
     bool event(QEvent *e) override;
-private slots:
+private Q_SLOTS:
     void slotClearChar();
 private:
     void handleKeyEvent(QKeyEvent *e);
@@ -1876,6 +1877,7 @@ QWidget *QtEnumEditorFactory::createEditor(QtEnumPropertyManager *manager, QtPro
         QWidget *parent)
 {
     QComboBox *editor = d_ptr->createEditor(property, parent);
+	editor->setFont(QApplication::font()); //FIXED: 字体修改, 避免 Qt 中文字体的 Bug
     editor->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     editor->view()->setTextElideMode(Qt::ElideRight);
     QStringList enumNames = manager->enumNames(property);

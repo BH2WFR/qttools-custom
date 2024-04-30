@@ -4,6 +4,7 @@
 #ifndef QTPROPERTYBROWSER_H
 #define QTPROPERTYBROWSER_H
 
+#include "QtPropertyBrowser_Global.h"
 #include <QtWidgets/QWidget>
 #include <QtCore/QSet>
 
@@ -12,7 +13,8 @@ QT_BEGIN_NAMESPACE
 class QtAbstractPropertyManager;
 class QtPropertyPrivate;
 
-class QtProperty
+//FIXED: 给本头文件中所有类都加上 dll 导出声明
+class QtPropertyBrowser_EXPORT QtProperty
 {
 public:
     virtual ~QtProperty();
@@ -56,7 +58,7 @@ private:
 
 class QtAbstractPropertyManagerPrivate;
 
-class QtAbstractPropertyManager : public QObject
+class QtPropertyBrowser_EXPORT QtAbstractPropertyManager : public QObject
 {
     Q_OBJECT
 public:
@@ -87,7 +89,7 @@ private:
     Q_DISABLE_COPY_MOVE(QtAbstractPropertyManager)
 };
 
-class QtAbstractEditorFactoryBase : public QObject
+class QtPropertyBrowser_EXPORT QtAbstractEditorFactoryBase : public QObject
 {
     Q_OBJECT
 public:
@@ -103,8 +105,9 @@ protected Q_SLOTS:
     friend class QtAbstractPropertyBrowser;
 };
 
+
 template <class PropertyManager>
-class QtAbstractEditorFactory : public QtAbstractEditorFactoryBase
+class QtPropertyBrowser_EXPORT QtAbstractEditorFactory : public QtAbstractEditorFactoryBase
 {
 public:
     explicit QtAbstractEditorFactory(QObject *parent) : QtAbstractEditorFactoryBase(parent) {}
@@ -178,10 +181,16 @@ private:
     friend class QtAbstractPropertyEditor;
 };
 
+
+
+
+
+
+
 class QtAbstractPropertyBrowser;
 class QtBrowserItemPrivate;
 
-class QtBrowserItem
+class QtPropertyBrowser_EXPORT QtBrowserItem
 {
 public:
     QtProperty *property() const;
@@ -197,7 +206,7 @@ private:
 
 class QtAbstractPropertyBrowserPrivate;
 
-class QtAbstractPropertyBrowser : public QWidget
+class QtPropertyBrowser_EXPORT QtAbstractPropertyBrowser : public QWidget
 {
     Q_OBJECT
 public:

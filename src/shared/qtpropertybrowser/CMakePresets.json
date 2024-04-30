@@ -1,0 +1,61 @@
+{
+	//* 代替 cmakeSettings.json, 脱离 vs, 使用 vscode 构建项目
+	"version": 5, //* presets版本, 越高cmake要求版本越高, vs 最高支持版本 5
+	//参考: https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html
+	"cmakeMinimumRequired": {"major": 3, "minor": 23}, // cmake 最低支持版本 v3.23
+	
+	"configurePresets": [
+		{//* ninja-MSVC-x64-debug
+			"name":"Ninja-MS-D",
+			"displayName": "Ninja-MS-D",
+			"description": "Ninja MSVC Windows x64 Debug",
+			
+			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/BUILD/${presetName}",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug",
+				"CMAKE_C_COMPILER": "cl", "CMAKE_CXX_COMPILER": "cl", //* 使用 MSVC 编译器
+				"CMAKE_INSTALL_PREFIX": "${sourceDir}/INSTALL/",
+				"CMAKE_EXPORT_COMPILE_COMMANDS": "True", //* 导出 compile_commands.json 用于 clangd 解析
+				"CMAKE_DEBUG_POSTFIX": "d",
+				"CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS": "OFF" //* dll 强制导出所有符号
+			},
+			"architecture": {
+				"value": "x64", //* 处理器架构: AMD64
+				"strategy": "external"
+			},
+			"toolset": {
+				"value": "host=x64,version=14.3", //* 筛选编译器, "version=14.1,host=x64" 版本 14.1:2017; 14.2:2019; 14.3:2022, version 可去除
+				"strategy": "external"
+			}
+		},
+		{//* ninja-MSVC-x64-release
+			"name":"Ninja-MS-R",
+			"displayName": "Ninja-MS-R",
+			"description": "Ninja MSVC Windows x64 Release",
+			
+			"inherits": "Ninja-MS-D", // 其他设置与前一个 Preset 相同
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "Ninja-MS-D",
+			"displayName": "Ninja-MS-D",
+			"description": "Ninja MSVC Windows x64 Debug",
+			
+			"configurePreset": "Ninja-MS-D",
+			"configuration": "Debug"
+		},
+		{
+			"name": "Ninja-MS-R",
+			"displayName": "Ninja-MS-R",
+			"description": "Ninja MSVC Windows x64 Release",
+			
+			"configurePreset": "Ninja-MS-R",
+			"configuration": "Release"
+		}
+	]
+}

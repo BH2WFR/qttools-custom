@@ -15,6 +15,7 @@
 #ifndef QTPROPERTYBROWSERUTILS_H
 #define QTPROPERTYBROWSERUTILS_H
 
+#include "QtPropertyBrowser_Global.h"
 #include <QtCore/QMap>
 #include <QtGui/QIcon>
 #include <QtWidgets/QWidget>
@@ -26,7 +27,8 @@ class QMouseEvent;
 class QCheckBox;
 class QLineEdit;
 
-class QtCursorDatabase
+//FIXED: 给这里每个类都加上 dll 导出声明
+class QtPropertyBrowser_EXPORT QtCursorDatabase
 {
 public:
     QtCursorDatabase();
@@ -51,7 +53,8 @@ private:
     QMap<Qt::CursorShape, int> m_cursorShapeToValue;
 };
 
-class QtPropertyBrowserUtils
+//FIXED: 给这里每个类都加上 dll 导出声明
+class QtPropertyBrowser_EXPORT QtPropertyBrowserUtils
 {
 public:
     static QPixmap brushValuePixmap(const QBrush &b);
@@ -65,7 +68,8 @@ public:
     static QString dateTimeFormat();
 };
 
-class QtBoolEdit : public QWidget {
+//FIXED: 给这里每个类都加上 dll 导出声明
+class QtPropertyBrowser_EXPORT QtBoolEdit : public QWidget {
     Q_OBJECT
 public:
     QtBoolEdit(QWidget *parent = 0);

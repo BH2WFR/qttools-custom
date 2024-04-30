@@ -4,6 +4,7 @@
 #ifndef QTVARIANTPROPERTY_H
 #define QTVARIANTPROPERTY_H
 
+#include "QtPropertyBrowser_Global.h"
 #include "qtpropertybrowser.h"
 #include <QtCore/QVariant>
 #include <QtGui/QIcon>
@@ -14,7 +15,8 @@ class QRegularExpression;
 
 class QtVariantPropertyManager;
 
-class QtVariantProperty : public QtProperty
+//FIXED: 给本头文件中所有类都加上 dll 导出声明
+class QtPropertyBrowser_EXPORT QtVariantProperty : public QtProperty
 {
 public:
     ~QtVariantProperty();
@@ -32,7 +34,8 @@ private:
     QScopedPointer<class QtVariantPropertyPrivate> d_ptr;
 };
 
-class QtVariantPropertyManager : public QtAbstractPropertyManager
+//FIXED: 给本头文件中所有类都加上 dll 导出声明
+class QtPropertyBrowser_EXPORT QtVariantPropertyManager : public QtAbstractPropertyManager
 {
     Q_OBJECT
 public:
@@ -78,7 +81,7 @@ private:
     Q_DISABLE_COPY_MOVE(QtVariantPropertyManager)
 };
 
-class QtVariantEditorFactory : public QtAbstractEditorFactory<QtVariantPropertyManager>
+class QtPropertyBrowser_EXPORT QtVariantEditorFactory : public QtAbstractEditorFactory<QtVariantPropertyManager>
 {
     Q_OBJECT
 public:
@@ -94,6 +97,12 @@ private:
     Q_DECLARE_PRIVATE(QtVariantEditorFactory)
     Q_DISABLE_COPY_MOVE(QtVariantEditorFactory)
 };
+
+
+//FIXED: 给这里模板类的实例单独声明 dll 导出
+class QtVariantPropertyManager;
+template class QtPropertyBrowser_EXPORT QtAbstractEditorFactory<QtVariantPropertyManager>;
+
 
 QT_END_NAMESPACE
 

@@ -1,6 +1,42 @@
 # This file is used to ignore files which are generated in the Qt build system
 # ----------------------------------------------------------------------------
 
+#* 各构建目录与安装目录
+**/out/
+**/Out/
+**/OUT/
+**/build/
+**/Build/
+**/BUILD/
+**/install/
+**/Install/
+**/INSTALL/
+**/build-*-*/
+
+#* 构建工具产生的, 不应提交的文件
+CMakeCache.txt
+CMakeLists.txt.user
+CMakeLists.txt.user.*
+CMakeUserPresets.json
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.qmlproject.user
+*.qmlproject.user.*
+.qmake.cache
+.qmake.vars
+Makefile*
+target_wrapper.*
+compile_commands.json
+Makefile*
+.ninja_deps
+.ninja_log
+build.ninja
+# cmake_install.cmake
+# deps
+
+
 .qtc_clangd
 CMakeLists.txt.user
 examples/*/*/*[.]app

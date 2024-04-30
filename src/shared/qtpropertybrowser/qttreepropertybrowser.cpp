@@ -220,7 +220,7 @@ public:
 
     QTreeWidgetItem *editedItem() const { return m_editedItem; }
 
-private slots:
+private Q_SLOTS:
     void slotEditorDestroyed(QObject *object);
 
 private:
@@ -428,7 +428,14 @@ void QtTreePropertyBrowserPrivate::init(QWidget *parent)
     m_treeWidget->header()->setSectionResizeMode(QHeaderView::Stretch);
 
     m_expandIcon = drawIndicatorIcon(q_ptr->palette(), q_ptr->style());
-
+	
+	
+	//FIXED: 修改部分, 增加字体设置, 解决 Qt 中文字体的 Bug, 且让横向可以通过拖动改变宽度
+	m_treeWidget->setFont(QApplication::font());
+	m_treeWidget->header()->setFont(QApplication::font());
+	m_treeWidget->header()->setSectionResizeMode(QHeaderView::Interactive);
+	
+	
     QObject::connect(m_treeWidget, &QTreeView::collapsed,
                      q_ptr, [this](const QModelIndex &index) { slotCollapsed(index); });
     QObject::connect(m_treeWidget, &QTreeView::expanded,

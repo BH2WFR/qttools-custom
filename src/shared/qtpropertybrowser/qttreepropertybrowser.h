@@ -4,6 +4,7 @@
 #ifndef QTTREEPROPERTYBROWSER_H
 #define QTTREEPROPERTYBROWSER_H
 
+#include "QtPropertyBrowser_Global.h"
 #include "qtpropertybrowser.h"
 
 QT_BEGIN_NAMESPACE
@@ -11,7 +12,8 @@ QT_BEGIN_NAMESPACE
 class QTreeWidgetItem;
 class QtTreePropertyBrowserPrivate;
 
-class QtTreePropertyBrowser : public QtAbstractPropertyBrowser
+//FIXED: 给本头文件中所有类都加上 dll 导出声明
+class QtPropertyBrowser_EXPORT QtTreePropertyBrowser : public QtAbstractPropertyBrowser
 {
     Q_OBJECT
     Q_PROPERTY(int indentation READ indentation WRITE setIndentation)

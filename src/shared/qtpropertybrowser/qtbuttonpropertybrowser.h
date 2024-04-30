@@ -4,13 +4,14 @@
 #ifndef QTBUTTONPROPERTYBROWSER_H
 #define QTBUTTONPROPERTYBROWSER_H
 
+#include "QtPropertyBrowser_Global.h"
 #include "qtpropertybrowser.h"
 
 QT_BEGIN_NAMESPACE
 
 class QtButtonPropertyBrowserPrivate;
 
-class QtButtonPropertyBrowser : public QtAbstractPropertyBrowser
+class QtPropertyBrowser_EXPORT QtButtonPropertyBrowser : public QtAbstractPropertyBrowser
 {
     Q_OBJECT
 public:
