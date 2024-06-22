@@ -33,10 +33,10 @@ public:
     static inline const QSet<QString> meta_commands = QSet<QString>(CodeParser::common_meta_commands)
         << COMMAND_COMPARES << COMMAND_COMPARESWITH << COMMAND_INHEADERFILE
         << COMMAND_NEXTPAGE << COMMAND_OVERLOAD << COMMAND_PREVIOUSPAGE
-        << COMMAND_QMLINSTANTIATES << COMMAND_REIMP << COMMAND_RELATES;
+        << COMMAND_QMLINSTANTIATES << COMMAND_QMLNATIVETYPE << COMMAND_REIMP << COMMAND_RELATES;
 
 public:
-    CppCodeParser(FnCommandParser&& parser);
+    explicit CppCodeParser(FnCommandParser&& parser);
 
     FunctionNode *parseMacroArg(const Location &location, const QString &macroArg);
     FunctionNode *parseOtherFuncArg(const QString &topic, const Location &location,
@@ -62,6 +62,7 @@ protected:
 private:
     void setExampleFileLists(ExampleNode *en);
     static void processComparesCommand(Node *node, const QString &arg, const Location &loc);
+    void processQmlNativeTypeCommand(Node *node, const QString &arg, const Location &loc);
 
 private:
     FnCommandParser fn_parser;

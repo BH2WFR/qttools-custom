@@ -115,6 +115,7 @@ void HtmlGenerator::initializeGenerator()
                      { ATOM_FORMATTING_SUPERSCRIPT, "<sup>", "</sup>" },
                      { ATOM_FORMATTING_TELETYPE, "<code translate=\"no\">",
                        "</code>" }, // <tt> tag is not supported in HTML5
+                     { ATOM_FORMATTING_TRADEMARK, "<span translate=\"no\">", "&#8482;" },
                      { ATOM_FORMATTING_UICONTROL, "<b translate=\"no\">", "</b>" },
                      { ATOM_FORMATTING_UNDERLINE, "<u>", "</u>" },
                      { nullptr, nullptr, nullptr } };
@@ -200,6 +201,9 @@ void HtmlGenerator::initializeGenerator()
     m_qmltypestitle = config->get(CONFIG_NAVIGATION
                                   + Config::dot + CONFIG_QMLTYPESTITLE)
                                   .asString(QLatin1String("QML Types"));
+
+    m_trademarkspage = config->get(CONFIG_NAVIGATION
+                                   + Config::dot + CONFIG_TRADEMARKSPAGE).asString();
 
     m_buildversion = config->get(CONFIG_BUILDVERSION).asString();
 }
@@ -416,6 +420,18 @@ qsizetype HtmlGenerator::generateAtom(const Atom *atom, const Node *relative, Co
     case Atom::FormattingRight:
         if (atom->string() == ATOM_FORMATTING_LINK) {
             endLink();
+        } else if (atom->string() == ATOM_FORMATTING_TRADEMARK) {
+            if (appendTrademark(atom)) {
+                // Make the trademark symbol a link to navigation.trademarkspage (if set)
+                const Node *node{nullptr};
+                const Atom tm_link(Atom::NavLink, m_trademarkspage);
+                if (const auto &link = getLink(&tm_link, relative, &node);
+                        !link.isEmpty() && node != relative)
+                    out() << "<a href=\"%1\">%2</a>"_L1.arg(link, formattingRightMap()[atom->string()]);
+                else
+                    out() << formattingRightMap()[atom->string()];
+            }
+            out() << "</span>";
         } else if (atom->string().startsWith("span ")) {
             out() << "</span>";
         } else {
@@ -423,13 +439,13 @@ qsizetype HtmlGenerator::generateAtom(const Atom *atom, const Node *relative, Co
         }
         break;
     case Atom::AnnotatedList: {
-        const CollectionNode *cn = m_qdb->getCollectionNode(atom->string(), Node::Group);
-        if (cn)
-            generateList(cn, marker, atom->string());
+        if (const auto *cn = m_qdb->getCollectionNode(atom->string(), Node::Group); cn)
+            generateList(cn, marker, atom->string(), Generator::sortOrder(atom->strings().last()));
     } break;
-    case Atom::GeneratedList:
+    case Atom::GeneratedList: {
+        const auto sortOrder{Generator::sortOrder(atom->strings().last())};
         if (atom->string() == QLatin1String("annotatedclasses")) {
-            generateAnnotatedList(relative, marker, m_qdb->getCppClasses().values());
+            generateAnnotatedList(relative, marker, m_qdb->getCppClasses().values(), sortOrder);
         } else if (atom->string() == QLatin1String("annotatedexamples")) {
             generateAnnotatedLists(relative, marker, m_qdb->getExamples());
         } else if (atom->string() == QLatin1String("annotatedattributions")) {
@@ -456,17 +472,17 @@ qsizetype HtmlGenerator::generateAtom(const Atom *atom, const Node *relative, Co
                 case Node::Module:
                     // classesbymodule <module_name>
                     map = cn->getMembers([](const Node *n) { return n->isClassNode(); });
-                    generateAnnotatedList(relative, marker, map.values());
+                    generateAnnotatedList(relative, marker, map.values(), sortOrder);
                     break;
                 case Node::QmlModule:
                     if (atom->string().contains(QLatin1String("qmlvaluetypes")))
                         map = cn->getMembers(Node::QmlValueType); // qmlvaluetypesbymodule <module_name>
                     else
                         map = cn->getMembers(Node::QmlType);      // qmltypesbymodule <module_name>
-                    generateAnnotatedList(relative, marker, map.values());
+                    generateAnnotatedList(relative, marker, map.values(), sortOrder);
                     break;
                 default: // fall back to listing all members
-                    generateAnnotatedList(relative, marker, cn->members());
+                    generateAnnotatedList(relative, marker, cn->members(), sortOrder);
                     break;
                 }
             }
@@ -487,23 +503,23 @@ qsizetype HtmlGenerator::generateAtom(const Atom *atom, const Node *relative, Co
         } else if (atom->string() == QLatin1String("functionindex")) {
             generateFunctionIndex(relative);
         } else if (atom->string() == QLatin1String("attributions")) {
-            generateAnnotatedList(relative, marker, m_qdb->getAttributions().values());
+            generateAnnotatedList(relative, marker, m_qdb->getAttributions().values(), sortOrder);
         } else if (atom->string() == QLatin1String("legalese")) {
             generateLegaleseList(relative, marker);
         } else if (atom->string() == QLatin1String("overviews")) {
-            generateList(relative, marker, "overviews");
+            generateList(relative, marker, "overviews", sortOrder);
         } else if (atom->string() == QLatin1String("cpp-modules")) {
-            generateList(relative, marker, "cpp-modules");
+            generateList(relative, marker, "cpp-modules", sortOrder);
         } else if (atom->string() == QLatin1String("qml-modules")) {
-            generateList(relative, marker, "qml-modules");
+            generateList(relative, marker, "qml-modules", sortOrder);
         } else if (atom->string() == QLatin1String("namespaces")) {
-            generateAnnotatedList(relative, marker, m_qdb->getNamespaces().values());
+            generateAnnotatedList(relative, marker, m_qdb->getNamespaces().values(), sortOrder);
         } else if (atom->string() == QLatin1String("related")) {
-            generateList(relative, marker, "related");
+            generateList(relative, marker, "related", sortOrder);
         } else {
             const CollectionNode *cn = m_qdb->getCollectionNode(atom->string(), Node::Group);
             if (cn) {
-                if (!generateGroupList(const_cast<CollectionNode *>(cn)))
+                if (!generateGroupList(const_cast<CollectionNode *>(cn), sortOrder))
                     relative->location().warning(
                             QString("'\\generatelist %1' group is empty").arg(atom->string()));
             } else {
@@ -511,7 +527,7 @@ qsizetype HtmlGenerator::generateAtom(const Atom *atom, const Node *relative, Co
                         QString("'\\generatelist %1' no such group").arg(atom->string()));
             }
         }
-        break;
+    } break;
     case Atom::SinceList: {
         const NodeMultiMap &nsmap = m_qdb->getSinceMap(atom->string());
         if (nsmap.isEmpty())
@@ -699,8 +715,7 @@ qsizetype HtmlGenerator::generateAtom(const Atom *atom, const Node *relative, Co
             location.warning(
                     QStringLiteral("Can't link to '%1'").arg(atom->string()));
         }
-        beginLink(link, nullptr, relative);
-        m_linkNode = node;
+        beginLink(link, node, relative);
         skipAhead = 1;
     } break;
     case Atom::ExampleFileLink: {
@@ -1916,14 +1931,14 @@ void HtmlGenerator::generateRequisites(Aggregate *aggregate, CodeMarker *marker)
     const QString sinceText = "Since";
     const QString inheritedBytext = "Inherited By";
     const QString inheritsText = "Inherits";
-    const QString instantiatedByText = "Instantiated By";
+    const QString nativeTypeText = "In QML";
     const QString qtVariableText = "qmake";
     const QString cmakeText = "CMake";
     const QString statusText = "Status";
 
     // The order of the requisites matter
     const QStringList requisiteorder { headerText,         cmakeText,    qtVariableText,  sinceText,
-                                       instantiatedByText, inheritsText, inheritedBytext, statusText };
+                                       nativeTypeText, inheritsText, inheritedBytext, statusText };
 
     addIncludeFileToMap(aggregate, marker, requisites, text, headerText);
     addSinceToMap(aggregate, requisites, &text, sinceText);
@@ -1935,8 +1950,8 @@ void HtmlGenerator::generateRequisites(Aggregate *aggregate, CodeMarker *marker)
 
     if (aggregate->isClassNode()) {
         auto *classe = dynamic_cast<ClassNode *>(aggregate);
-        if (classe->qmlElement() != nullptr && !classe->isInternal())
-            addInstantiatedByToMap(requisites, &text, instantiatedByText, classe);
+        if (classe->isQmlNativeType() && !classe->isInternal())
+            addQmlNativeTypesToMap(requisites, &text, nativeTypeText, classe);
 
         addInheritsToMap(requisites, &text, inheritsText, classe);
         addInheritedByToMap(requisites, &text, inheritedBytext, classe);
@@ -2026,21 +2041,29 @@ void HtmlGenerator::addInheritsToMap(QMap<QString, Text> &requisites, Text *text
 }
 
 /*!
- * \internal
- * Add the instantiated by information to the map.
+    \internal
+    Add the QML/C++ native type information to the map.
  */
-void HtmlGenerator::addInstantiatedByToMap(QMap<QString, Text> &requisites, Text *text,
-                                           const QString &instantiatedByText,
-                                           ClassNode *classe) const
+ void HtmlGenerator::addQmlNativeTypesToMap(QMap<QString, Text> &requisites, Text *text,
+                                            const QString &nativeTypeText, ClassNode *classe) const
 {
-    if (text != nullptr) {
-        text->clear();
-        *text << Atom(Atom::LinkNode, CodeMarker::stringForNode(classe->qmlElement()))
+    if (!text)
+        return;
+
+    text->clear();
+
+    QList<QmlTypeNode *> nativeTypes { classe->qmlNativeTypes().cbegin(), classe->qmlNativeTypes().cend()};
+    std::sort(nativeTypes.begin(), nativeTypes.end(), Node::nodeNameLessThan);
+    qsizetype index { 0 };
+
+    for (const auto &item : std::as_const(nativeTypes)) {
+        *text << Atom(Atom::LinkNode, CodeMarker::stringForNode(item))
               << Atom(Atom::FormattingLeft, ATOM_FORMATTING_LINK)
-              << Atom(Atom::String, classe->qmlElement()->name())
+              << Atom(Atom::String, item->name())
               << Atom(Atom::FormattingRight, ATOM_FORMATTING_LINK);
-        requisites.insert(instantiatedByText, *text);
+        *text << Utilities::comma(index++, nativeTypes.size());
     }
+    requisites.insert(nativeTypeText, *text);
 }
 
 /*!
@@ -2169,7 +2192,7 @@ void HtmlGenerator::generateQmlRequisites(QmlTypeNode *qcn, CodeMarker *marker)
     const QString sinceText = "Since:";
     const QString inheritedBytext = "Inherited By:";
     const QString inheritsText = "Inherits:";
-    const QString instantiatesText = "Instantiates:";
+    const QString nativeTypeText = "In C++:";
     const QString statusText = "Status:";
 
     // add the module name and version to the map
@@ -2194,15 +2217,15 @@ void HtmlGenerator::generateQmlRequisites(QmlTypeNode *qcn, CodeMarker *marker)
         requisites.insert(sinceText, text);
     }
 
-    // add the instantiates to the map
+    // add the native type to the map
     ClassNode *cn = qcn->classNode();
-    if (cn && !cn->isInternal()) {
+    if (cn && cn->isQmlNativeType() && !cn->isInternal()) {
         text.clear();
         text << Atom(Atom::LinkNode, CodeMarker::stringForNode(cn));
         text << Atom(Atom::FormattingLeft, ATOM_FORMATTING_LINK);
         text << Atom(Atom::String, cn->name());
         text << Atom(Atom::FormattingRight, ATOM_FORMATTING_LINK);
-        requisites.insert(instantiatesText, text);
+        requisites.insert(nativeTypeText, text);
     }
 
     // add the inherits to the map
@@ -2234,7 +2257,7 @@ void HtmlGenerator::generateQmlRequisites(QmlTypeNode *qcn, CodeMarker *marker)
     addStatusToMap(qcn, requisites, text, statusText);
 
     // The order of the requisites matter
-    const QStringList requisiteorder { importText, sinceText, instantiatesText, inheritsText,
+    const QStringList requisiteorder { importText, sinceText, nativeTypeText, inheritsText,
                                        inheritedBytext, statusText };
 
     if (!requisites.isEmpty()) {
@@ -2622,7 +2645,7 @@ void HtmlGenerator::generateClassHierarchy(const Node *relative, NodeMultiMap &c
   A two-column table is output.
  */
 void HtmlGenerator::generateAnnotatedList(const Node *relative, CodeMarker *marker,
-                                          const NodeList &unsortedNodes)
+                                          const NodeList &unsortedNodes, Qt::SortOrder sortOrder)
 {
     if (unsortedNodes.isEmpty() || relative == nullptr)
         return;
@@ -2640,7 +2663,11 @@ void HtmlGenerator::generateAnnotatedList(const Node *relative, CodeMarker *mark
     out() << "<div class=\"table\"><table class=\"annotated\">\n";
     int row = 0;
     NodeList nodes = nmm.values();
-    std::sort(nodes.begin(), nodes.end(), Node::nodeNameLessThan);
+
+    if (sortOrder == Qt::DescendingOrder)
+        std::sort(nodes.rbegin(), nodes.rend(), Node::nodeSortKeyOrNameLessThan);
+    else
+        std::sort(nodes.begin(), nodes.end(), Node::nodeSortKeyOrNameLessThan);
 
     for (const auto *node : std::as_const(nodes)) {
         if (++row % 2 == 1)
@@ -2828,22 +2855,19 @@ void HtmlGenerator::generateCompactList(ListType listType, const Node *relative,
                 out() << "<a href=\"" << link << "\">";
             }
 
-            QStringList pieces;
-            if (it.value()->isQmlType()) {
-                QString name = it.value()->name();
-                next = it;
-                ++next;
-                if (name != previousName)
-                    multipleOccurrences = false;
-                if ((next != paragraph[curParNr].end()) && (name == next.value()->name())) {
-                    multipleOccurrences = true;
-                    previousName = name;
-                }
-                if (multipleOccurrences)
-                    name += ": " + it.value()->tree()->camelCaseModuleName();
-                pieces << name;
-            } else
-                pieces = it.value()->fullName(relative).split("::");
+            QStringList pieces{it.value()->fullName(relative).split("::"_L1)};
+            const auto &name{pieces.last()};
+            next = it;
+            ++next;
+            if (name != previousName)
+                multipleOccurrences = false;
+            if ((next != paragraph[curParNr].end()) && (name == next.value()->name())) {
+                multipleOccurrences = true;
+                previousName = name;
+            }
+            if (multipleOccurrences && pieces.size() == 1)
+                pieces.last().append(": %1"_L1.arg(it.value()->tree()->camelCaseModuleName()));
+
             out() << protectEnc(pieces.last());
             out() << "</a>";
             if (pieces.size() > 1) {
@@ -2941,18 +2965,24 @@ void HtmlGenerator::generateQmlItem(const Node *node, const Node *relative, Code
 }
 
 /*!
-  This function generates a simple unordered list for the members
-  of collection node \a {cn}. Returns \c true if the list was
-  generated (collection has members), \c false otherwise.
+  This function generates a simple list (without annotations) for
+  the members of collection node \a {cn}. The list is sorted
+  according to \a sortOrder.
+
+  Returns \c true if the list was generated (collection has members),
+  \c false otherwise.
  */
-bool HtmlGenerator::generateGroupList(CollectionNode *cn)
+bool HtmlGenerator::generateGroupList(CollectionNode *cn, Qt::SortOrder sortOrder)
 {
     m_qdb->mergeCollections(cn);
     if (cn->members().isEmpty())
         return false;
 
     NodeList members{cn->members()};
-    std::sort(members.begin(), members.end(), Node::nodeNameLessThan);
+    if (sortOrder == Qt::DescendingOrder)
+        std::sort(members.rbegin(), members.rend(), Node::nodeSortKeyOrNameLessThan);
+    else
+        std::sort(members.begin(), members.end(), Node::nodeSortKeyOrNameLessThan);
     out() << "<ul>\n";
     for (const auto *node : std::as_const(members)) {
         out() << "<li translate=\"no\">";
@@ -2963,7 +2993,8 @@ bool HtmlGenerator::generateGroupList(CollectionNode *cn)
     return true;
 }
 
-void HtmlGenerator::generateList(const Node *relative, CodeMarker *marker, const QString &selector)
+void HtmlGenerator::generateList(const Node *relative, CodeMarker *marker,
+                                 const QString &selector, Qt::SortOrder sortOrder)
 {
     CNMap cnm;
     Node::NodeType type = Node::NoType;
@@ -2980,7 +3011,7 @@ void HtmlGenerator::generateList(const Node *relative, CodeMarker *marker, const
         nodeList.reserve(collectionList.size());
         for (auto *collectionNode : collectionList)
             nodeList.append(collectionNode);
-        generateAnnotatedList(relative, marker, nodeList);
+        generateAnnotatedList(relative, marker, nodeList, sortOrder);
     } else {
         /*
           \generatelist {selector} is only allowed in a
@@ -2997,7 +3028,7 @@ void HtmlGenerator::generateList(const Node *relative, CodeMarker *marker, const
         auto *node = const_cast<Node *>(relative);
         auto *collectionNode = static_cast<CollectionNode *>(node);
         m_qdb->mergeCollections(collectionNode);
-        generateAnnotatedList(collectionNode, marker, collectionNode->members());
+        generateAnnotatedList(collectionNode, marker, collectionNode->members(), sortOrder);
     }
 }
 
@@ -3520,12 +3551,15 @@ void HtmlGenerator::beginLink(const QString &link, const Node *node, const Node 
     if (m_link.isEmpty())
         return;
 
+    const QString &translate_attr =
+            (node && node->genus() & Node::API) ? " translate=\"no\""_L1 : ""_L1;
+
     if (node == nullptr || (relative != nullptr && node->status() == relative->status()))
-        out() << "<a href=\"" << m_link << "\" translate=\"no\">";
+        out() << "<a href=\"" << m_link << "\"%1>"_L1.arg(translate_attr);
     else if (node->isDeprecated())
-        out() << "<a href=\"" << m_link << "\" class=\"obsolete\" translate=\"no\">";
+        out() << "<a href=\"" << m_link << "\" class=\"obsolete\"%1>"_L1.arg(translate_attr);
     else
-        out() << "<a href=\"" << m_link << "\" translate=\"no\">";
+        out() << "<a href=\"" << m_link << "\"%1>"_L1.arg(translate_attr);
 }
 
 void HtmlGenerator::endLink()

@@ -50,6 +50,7 @@ QList<Generator *> Generator::s_generators;
 QString Generator::s_outDir;
 QString Generator::s_outSubdir;
 QStringList Generator::s_outFileNames;
+QSet<QString> Generator::s_trademarks;
 QSet<QString> Generator::s_outputFormats;
 QHash<QString, QString> Generator::s_outputPrefixes;
 QHash<QString, QString> Generator::s_outputSuffixes;
@@ -213,6 +214,7 @@ QFile *Generator::openSubPageFile(const Node *node, const QString &fileName)
 
     qCDebug(lcQdoc, "Writing: %s", qPrintable(path));
     s_outFileNames << fileName;
+    s_trademarks.clear();
     return outFile;
 }
 
@@ -248,28 +250,22 @@ QString Generator::fileBase(const Node *node) const
     if (node->hasFileNameBase())
         return node->fileNameBase();
 
-    QString base;
-    if (node->isCollectionNode()) {
-        base = node->name() + outputSuffix(node);
-        if (base.endsWith(".html"))
-            base.truncate(base.size() - 5);
+    QString base{node->name()};
+    if (base.endsWith(".html"))
+        base.truncate(base.size() - 5);
 
+    if (node->isCollectionNode()) {
         if (node->isQmlModule())
             base.append("-qmlmodule");
         else if (node->isModule())
             base.append("-module");
-        // Why not add "-group" for group pages?
+        base.append(outputSuffix(node));
     } else if (node->isTextPageNode()) {
-        base = node->name();
-        if (base.endsWith(".html"))
-            base.truncate(base.size() - 5);
-
         if (node->isExample()) {
-            base.prepend(s_project.toLower() + QLatin1Char('-'));
-            base.append(QLatin1String("-example"));
+            base.prepend("%1-"_L1.arg(s_project.toLower()));
+            base.append("-example");
         }
     } else if (node->isQmlType()) {
-        base = node->name();
         /*
           To avoid file name conflicts in the html directory,
           we prepend a prefix (by default, "qml-") and an optional suffix
@@ -281,19 +277,19 @@ QString Generator::fileBase(const Node *node) const
         */
         if (!node->logicalModuleName().isEmpty() && !node->isQmlBasicType()
             && (!node->logicalModule()->isInternal() || m_showInternal))
-            base.prepend(node->logicalModuleName() + outputSuffix(node) + QLatin1Char('-'));
+            base.prepend("%1%2-"_L1.arg(node->logicalModuleName(), outputSuffix(node)));
 
-        base.prepend(outputPrefix(node));
     } else if (node->isProxyNode()) {
-        base.append("%1-%2-proxy"_L1.arg(node->name(), node->tree()->physicalModuleName()));
+        base.append("-%1-proxy"_L1.arg(node->tree()->physicalModuleName()));
     } else {
+        base.clear();
         const Node *p = node;
         forever {
             const Node *pp = p->parent();
             base.prepend(p->name());
             if (pp == nullptr || pp->name().isEmpty() || pp->isTextPageNode())
                 break;
-            base.prepend(QLatin1Char('-'));
+            base.prepend('-'_L1);
             p = pp;
         }
         if (node->isNamespace() && !node->name().isEmpty()) {
@@ -303,8 +299,10 @@ QString Generator::fileBase(const Node *node) const
                 base.append(ns->tree()->camelCaseModuleName());
             }
         }
+        base.append(outputSuffix(node));
     }
 
+    base.prepend(outputPrefix(node));
     QString canonicalName{ Utilities::asAsciiPrintable(base) };
     Node *n = const_cast<Node *>(node);
     n->setFileNameBase(canonicalName);
@@ -1393,6 +1391,36 @@ bool Generator::hasExceptions(const Node *node, NodeList &reentrant, NodeList &t
     return result;
 }
 
+/*!
+    Returns \c true if a trademark symbol should be appended to the
+    output as determined by \a atom. Trademarks are tracked via the
+    use of the \\tm formatting command.
+
+    Returns true if:
+
+    \list
+        \li \a atom is of type Atom::FormattingRight containing
+            ATOM_FORMATTING_TRADEMARK, and
+        \li The trademarked string is the first appearance on the
+            current sub-page.
+    \endlist
+*/
+bool Generator::appendTrademark(const Atom *atom)
+{
+    if (atom->type() != Atom::FormattingRight)
+        return false;
+    if (atom->string() != ATOM_FORMATTING_TRADEMARK)
+        return false;
+
+    if (atom->count() > 1) {
+        if (s_trademarks.contains(atom->string(1)))
+            return false;
+        s_trademarks << atom->string(1);
+    }
+
+    return true;
+}
+
 static void startNote(Text &text)
 {
     text << Atom::ParaLeft << Atom(Atom::FormattingLeft, ATOM_FORMATTING_BOLD)
@@ -1699,9 +1727,9 @@ void Generator::initialize()
         for (const auto &prefix : items)
             s_outputPrefixes[prefix] =
                     config.get(CONFIG_OUTPUTPREFIXES + Config::dot + prefix).asString();
-    } else {
-        s_outputPrefixes[QLatin1String("QML")] = QLatin1String("qml-");
     }
+    if (!items.contains(u"QML"_s))
+        s_outputPrefixes[u"QML"_s] = u"qml-"_s;
 
     s_outputSuffixes.clear();
     for (const auto &suffix : config.get(CONFIG_OUTPUTSUFFIXES).asStringList())
@@ -1846,19 +1874,32 @@ QString Generator::outFileName()
 
 QString Generator::outputPrefix(const Node *node)
 {
-    // Prefix is applied to QML types
-    if (node->isQmlType())
-        return s_outputPrefixes[QLatin1String("QML")];
-
+    // Omit prefix for module pages
+    if (node->isPageNode() && !node->isCollectionNode()) {
+        switch (node->genus()) {
+        case Node::QML:
+            return s_outputPrefixes[u"QML"_s];
+        case Node::CPP:
+            return s_outputPrefixes[u"CPP"_s];
+        default:
+            break;
+        }
+    }
     return QString();
 }
 
 QString Generator::outputSuffix(const Node *node)
 {
-    // Suffix is applied to QML types, as
-    // well as module pages.
-    if (node->isQmlModule() || node->isQmlType())
-        return s_outputSuffixes[QLatin1String("QML")];
+    if (node->isPageNode()) {
+        switch (node->genus()) {
+        case Node::QML:
+            return s_outputSuffixes[u"QML"_s];
+        case Node::CPP:
+            return s_outputSuffixes[u"CPP"_s];
+        default:
+            break;
+        }
+    }
 
     return QString();
 }
@@ -2037,20 +2078,13 @@ void Generator::generateEnumValuesForQmlProperty(const Node *node, CodeMarker *m
     if (!qpn->enumNode())
         return;
 
-    auto findNext =
-            [](const Atom *atom, Atom::AtomType type, const QString &str) {
-                while (atom && (atom->type() != type || atom->string() != str))
-                    atom = atom->next();
-                return atom;
-            };
-
     // Retrieve atoms from C++ enum \value list
     const auto body{qpn->enumNode()->doc().body()};
     const auto *start{body.firstAtom()};
     Text text;
 
-    while ((start = findNext(start, Atom::ListLeft, ATOM_LIST_VALUE))) {
-        const auto end = findNext(start, Atom::ListRight, ATOM_LIST_VALUE);
+    while ((start = start->find(Atom::ListLeft, ATOM_LIST_VALUE))) {
+        const auto end = start->find(Atom::ListRight, ATOM_LIST_VALUE);
         // Skip subsequent ListLeft atoms, collating multiple lists into one
         text << body.subText(text.isEmpty() ? start : start->next(), end);
         start = end;

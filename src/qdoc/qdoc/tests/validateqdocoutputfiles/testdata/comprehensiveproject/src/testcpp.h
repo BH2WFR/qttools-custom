@@ -9,7 +9,7 @@
 #endif
 
 #define QDOCTEST_MACRO test
-#define QDOCTEST_MACRO2(x) (x) < 0 ? 0 : (x))
+#define QDOCTEST_MACRO2(x) (x) < 0 ? 0 : (x)
 
 namespace TestQDoc {
 
@@ -67,6 +67,9 @@ using Specialized = Struct<int, T>;
     virtual void virtualFun();
 
     friend bool operator==(const Test &lhs, const Test &rhs) { return false; }
+
+    Test() = delete;
+    Test &operator=(Test &&other) = delete;
 
 protected:
     void overload() {}

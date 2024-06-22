@@ -33,7 +33,7 @@
 target_link_libraries(mytarget PRIVATE Qt6::QDocTest)</td></tr>
 <tr><td class="memItemLeft rightAlign topAlign"> qmake:</td><td class="memItemRight bottomAlign"> QT += testcpp</td></tr>
 <tr><td class="memItemLeft rightAlign topAlign"> Since:</td><td class="memItemRight bottomAlign"> Qt 1.1</td></tr>
-<tr><td class="memItemLeft rightAlign topAlign"> Instantiated By:</td><td class="memItemRight bottomAlign"> <a href="qml-qdoc-test-type.html" translate="no">Type</a></td></tr>
+<tr><td class="memItemLeft rightAlign topAlign"> In QML:</td><td class="memItemRight bottomAlign"> <a href="qml-qdoc-test-type.html" translate="no">Type</a></td></tr>
 <tr><td class="memItemLeft rightAlign topAlign"> Inherited By:</td><td class="memItemRight bottomAlign"> <p><a href="testqdoc-testderived.html" translate="no">TestQDoc::TestDerived</a></p>
 </td></tr>
 </table></div>
@@ -42,7 +42,7 @@ target_link_libraries(mytarget PRIVATE Qt6::QDocTest)</td></tr>
 <li><a href="testqdoc-test-obsolete.html">Deprecated members</a></li>
 <li>Test is part of <a href="cpptypes.html">Test C++ Types</a>.</li>
 </ul>
-<p><b>Note:</b> All functions in this class are <a href="https://doc.qt.io/qt/17-qdoc-commands-thread.html#reentrant-command" translate="no">reentrant</a> with the following exceptions:</p>
+<p><b>Note:</b> All functions in this class are <a href="https://doc.qt.io/qt/17-qdoc-commands-thread.html#reentrant-command">reentrant</a> with the following exceptions:</p>
 <ul>
 <li><a href="testqdoc-test.html#someFunctionDefaultArg" translate="no">someFunctionDefaultArg</a>(int i, bool b) const</li>
 </ul>
@@ -95,8 +95,8 @@ target_link_libraries(mytarget PRIVATE Qt6::QDocTest)</td></tr>
 <p>Overloads that share a documentation comment, optionally taking a parameter <i translate="no">b</i>.</p>
 <!-- @@@ -->
 <!-- $$$Test[overload1]$$$Test -->
-<h3 class="fn" translate="no" id="Test"><code class="details extra" translate="no">[noexcept default]</code> Test::<span class="name">Test</span>()</h3>
-<p>Default constructor.</p>
+<h3 class="fn" translate="no" id="Test">Test::<span class="name">Test</span>()</h3>
+<p>The constructor is deleted.</p>
 <!-- @@@Test -->
 <!-- $$$funcPtr[overload1]$$$funcPtrboolconstchar* -->
 <h3 class="fn" translate="no" id="funcPtr"><span class="type">void</span> (*)(<span class="type">bool</span>) Test::<span class="name">funcPtr</span>(<span class="type">bool</span> <i>b</i>, const <span class="type">char</span> *<i>s</i>)</h3>
@@ -134,7 +134,7 @@ target_link_libraries(mytarget PRIVATE Qt6::QDocTest)</td></tr>
 <!-- $$$someFunctionDefaultArg[overload1]$$$someFunctionDefaultArgintbool -->
 <h3 class="fn" translate="no" id="someFunctionDefaultArg"><code class="details extra" translate="no">[since 2.0]</code> <span class="type">void</span> Test::<span class="name">someFunctionDefaultArg</span>(<span class="type">int</span> <i>i</i>, <span class="type">bool</span> <i>b</i> = false) const</h3>
 <p>Function that takes a parameter <i translate="no">i</i> and <i translate="no">b</i>.</p>
-<p><b>Warning:</b> This function is not <a href="https://doc.qt.io/qt/17-qdoc-commands-thread.html#reentrant-command" translate="no">reentrant</a>.</p>
+<p><b>Warning:</b> This function is not <a href="https://doc.qt.io/qt/17-qdoc-commands-thread.html#reentrant-command">reentrant</a>.</p>
 <p>This function was introduced in Qt 2.0.</p>
 <!-- @@@someFunctionDefaultArg -->
 <!-- $$$virtualFun[overload1]$$$virtualFun -->
@@ -142,8 +142,8 @@ target_link_libraries(mytarget PRIVATE Qt6::QDocTest)</td></tr>
 <p>Function that must be reimplemented.</p>
 <!-- @@@virtualFun -->
 <!-- $$$operator=[overload1]$$$operator=TestQDoc::Test&& -->
-<h3 class="fn" translate="no" id="operator-eq"><code class="details extra" translate="no">[noexcept default]</code> <span class="type"><a href="testqdoc-test.html" translate="no">TestQDoc::Test</a></span> &amp;Test::<span class="name">operator=</span>(<span class="type"><a href="testqdoc-test.html" translate="no">TestQDoc::Test</a></span> &amp;&amp;<i>other</i>)</h3>
-<p>Move-assigns <i translate="no">other</i>.</p>
+<h3 class="fn" translate="no" id="operator-eq"><span class="type"><a href="testqdoc-test.html" translate="no">TestQDoc::Test</a></span> &amp;Test::<span class="name">operator=</span>(<span class="type"><a href="testqdoc-test.html" translate="no">TestQDoc::Test</a></span> &amp;&amp;<i>other</i>)</h3>
+<p>The move assignment operator is deleted. <i translate="no">other</i> cannot be moved from.</p>
 <!-- @@@operator= -->
 </div>
 <div class="relnonmem">

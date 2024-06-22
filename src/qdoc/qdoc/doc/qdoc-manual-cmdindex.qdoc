@@ -55,7 +55,7 @@
     \li \l {inlineimage-command} {\\inlineimage}
     \li \l {inmodule-command} {\\inmodule}
     \li \l {inqmlmodule-command} {\\inqmlmodule}
-    \li \l {instantiates-command} {\\instantiates}
+    \li \l {instantiates-command} {\\instantiates} (deprecated, use \\nativetype)
     \li \l {internal-command} {\\internal}
     \li \l {keyword-command} {\\keyword}
     \li \l {l-command} {\\l}
@@ -67,6 +67,7 @@
     \li \l {module-command} {\\module}
     \li \l {modulestate-command} {\\modulestate}
     \li \l {namespace-command} {\\namespace}
+    \li \l {nativetype-command} {\\nativetype}
     \li \l {nextpage-command} {\\nextpage}
     \li \l {noautolist-command} {\\noautolist}
     \li \l {nonreentrant-command} {\\nonreentrant}
@@ -128,6 +129,7 @@
     \li \l {target-command} {\\target}
     \li \l {threadsafe-command} {\\threadsafe}
     \li \l {title-command} {\\title}
+    \li \qdoccmd tm
     \li \l {tt-command} {\\tt}
     \li \l {typealias-command} {\\typealias}
     \li \l {typedef-command} {\\typedef}

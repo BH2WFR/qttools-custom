@@ -435,21 +435,11 @@ void CppCodeParser::processMetaCommand(const Doc &doc, const QString &command,
             auto *qmlType = static_cast<QmlTypeNode *>(node);
             qmlType->setQmlBaseName(arg);
         }
-    } else if (command == COMMAND_QMLINSTANTIATES) {
-        if (node->isQmlType()) {
-            ClassNode *classNode = database->findClassNode(arg.split("::"));
-            if (classNode)
-                node->setClassNode(classNode);
-            else if (m_showLinkErrors) {
-                doc.location().warning(
-                        QStringLiteral("C++ class %2 not found: \\%1 %2")
-                                .arg(command, arg));
-            }
-        } else {
-            doc.location().warning(
-                    QStringLiteral("\\%1 is only allowed in \\%2")
-                            .arg(command, COMMAND_QMLTYPE));
-        }
+    } else if (command == COMMAND_QMLNATIVETYPE || command == COMMAND_QMLINSTANTIATES) {
+        if (command == COMMAND_QMLINSTANTIATES)
+            doc.location().report(u"\\instantiates is deprected and will be removed in a future version. Use \\nativetype instead."_s);
+        // TODO: COMMAND_QMLINSTANTIATES is deprecated since 6.8. Its remains should be removed no later than Qt 7.0.0.
+        processQmlNativeTypeCommand(node, arg, doc.location());
     } else if (command == COMMAND_DEFAULT) {
         if (!node->isQmlProperty()) {
             doc.location().warning(QStringLiteral("Ignored '\\%1', applies only to '\\%2'")
@@ -992,6 +982,40 @@ void CppCodeParser::processMetaCommands(const std::vector<TiedDocumentation> &ti
             }
         }
     }
+}
+
+void CppCodeParser::processQmlNativeTypeCommand(Node *node, const QString &arg, const Location &location)
+{
+    Q_ASSERT(node);
+    if (!node->isQmlNode()) {
+        location.warning(
+                QStringLiteral("Command '\\%1' is only meaningful in '\\%2'")
+                        .arg(COMMAND_QMLNATIVETYPE, COMMAND_QMLTYPE));
+        return;
+    }
+
+    auto qmlNode = static_cast<QmlTypeNode *>(node);
+
+    QDocDatabase *database = QDocDatabase::qdocDB();
+    auto classNode = database->findClassNode(arg.split(u"::"_s));
+
+    if (!classNode) {
+        if (m_showLinkErrors) {
+            location.warning(
+                    QStringLiteral("C++ class %2 not found: \\%1 %2")
+                            .arg(COMMAND_QMLNATIVETYPE, arg));
+        }
+        return;
+    }
+
+    if (qmlNode->classNode()) {
+        location.warning(
+                QStringLiteral("QML type %1 documented with %2 as its native type. Replacing %2 with %3")
+                        .arg(qmlNode->name(), qmlNode->classNode()->name(), arg));
+    }
+
+    qmlNode->setClassNode(classNode);
+    classNode->insertQmlNativeType(qmlNode);
 }
 
 QT_END_NAMESPACE
